@@ -36,7 +36,7 @@ class Language:
 class TextDataset(Dataset):
     def __init__(self, data_file_path, offset=0, limit=None, sample_length=10, do_filter=True):
         """
-        训练数据组织结构
+        训练数据组织结构，将所有的数据读取到内存后再处理，不可处理太大的文件
         Args:
             data_file_path (str): 文本数据的路径，详情见 'Notes'
             offset (int): 从第offset行开始读取数据
@@ -52,12 +52,11 @@ class TextDataset(Dataset):
             ...
             <language1 sentence n><\t><language2 sentence n>
 
-            eg. 在文件'eng-fra.txt'中
-            I'm cold.	J'ai froid.
-            I'm done.	J'en ai fini.
+            eg. 在文件'fra-eng.txt'(法-英)中
+            Il a laissé tomber.	He quit.
+            Il court.	He runs.
             ...
-            I'm fine.	Tout va bien.
-
+            Aide-moi !	Help me!
         Returns:
         """
         super(TextDataset, self).__init__()
@@ -78,9 +77,8 @@ class TextDataset(Dataset):
         for pair in self.pairs:
             input_lang.add_sentence(pair[0])
             output_lang.add_sentence(pair[1])
-        print("Counted words:")
-        print(input_lang.name, input_lang.n_words)
-        print(output_lang.name, output_lang.n_words)
+        # print("Counted words:")
+        print(input_lang.name, input_lang.n_words, "\t", output_lang.name, output_lang.n_words)
         self.length = len(self.pairs)
 
     def __len__(self):
@@ -146,15 +144,17 @@ class TextDataset(Dataset):
 if __name__ == '__main__':
     from pprint import pprint
     text_data = TextDataset(
-        data_file_path='../data/eng-fra-val.txt',
+        data_file_path='../data/fra-eng-val.txt',
         sample_length=10,
         do_filter=True
     )
 
     dataset_list_length = text_data.__len__()
     dataset_list = text_data.dataset_lines
-    # pprint(dataset_list_length)
+    pairs = text_data.pairs
+    pprint(dataset_list_length)
     # pprint(dataset_list)
+    # pprint(pairs)
 
-    for item in text_data.__getitem__(0):
+    for item in text_data.__getitem__(2):
         pprint(item)
