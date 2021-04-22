@@ -98,7 +98,7 @@ eng_prefixes = (
     "he is", "he s ",
     "she is", "she s ",
     "you are", "you re ",
-    "we are", "we re ",
+    "we are", "we re ", 
     "they are", "they re "
 )
 
