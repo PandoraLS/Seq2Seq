@@ -135,10 +135,13 @@ class BaseTrainer:
         """
         torch.save(state_dict, (self.checkpoints_dir / "latest_model.tar").as_posix())
         torch.save(state_dict["encoder"], (self.checkpoints_dir / f"encoder_{str(epoch).zfill(4)}.pth").as_posix())
-        if is_best:
-            logging.info(f"\t Found best score in {epoch} epoch, saving...")
-            torch.save(state_dict, (self.checkpoints_dir / "best_model.tar").as_posix())
-            # torch.save(state_dict["model"], (self.checkpoints_dir / f"model_best.pth").as_posix())
+        torch.save(state_dict["decoder"], (self.checkpoints_dir / f"decoder_{str(epoch).zfill(4)}.pth").as_posix())
+        
+        # 由于不通过score来评判模型，所以不存储best模型
+        # if is_best:
+        #     logging.info(f"\t Found best score in {epoch} epoch, saving...")
+        #     torch.save(state_dict, (self.checkpoints_dir / "best_model.tar").as_posix())
+        #     # torch.save(state_dict["model"], (self.checkpoints_dir / f"model_best.pth").as_posix())
 
         # Use model.cpu(), model.to("cpu") will migrate the model to CPU, at which point we need re-migrate model back.
         # No matter tensor.cuda() or torch.to("cuda"), if tensor in CPU, the tensor will not be migrated to GPU, but the model will.
@@ -169,7 +172,13 @@ class BaseTrainer:
         return device
 
     def _is_best(self, score, find_max=True):
-        """Check if the current model is the best model"""
+        """
+        Check if the current model is the best model
+        Args:
+            score: 评估指标
+            find_max: True表示score越大模型越好, False表示score越小模型越好
+        Returns (bools): 是最佳模型True, 不是最佳模型False
+        """
         if find_max and score >= self.best_score: # score取最大值时为best
             self.best_score = score
             return True
@@ -217,11 +226,12 @@ class BaseTrainer:
                 logging.info(f"[{timer.duration():.3f} seconds] Training is over, Validation is in progress...")
 
                 self._set_models_to_eval_mode()
-                score = self._validation_epoch(epoch)
-
-                if self._is_best(score, find_max=self.find_max):
-                    logging.info(f"\t Best score: {score:.4f}")
-                    self._save_checkpoint(epoch, is_best=True)
+                
+                # 由于不进行验证集的指标评估，所以不通过score保存模型
+                # score = self._validation_epoch(epoch)
+                # if self._is_best(score, find_max=self.find_max):
+                #     logging.info(f"\t Best score: {score:.4f}")
+                #     self._save_checkpoint(epoch, is_best=True)
 
             logging.info(f"[{timer.duration():.3f} seconds] End this epoch.")
 
