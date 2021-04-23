@@ -9,3 +9,8 @@ import torch
 
 def mse_loss():
     return torch.nn.MSELoss()
+
+def NLLLoss():
+    # The negative log likelihood loss. 
+    # It is useful to train a classification problem with C classes.
+    return torch.nn.NLLLoss()

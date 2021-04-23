@@ -73,7 +73,7 @@ def read_langs(lang1, lang2, reverse=False):
     print('Reading lines....')
 
     # lines = open('data/%s-%s.txt' % (lang1, lang2), encoding='utf-8').read().strip().split('\n')
-    lines = open('data/eng-fra-val.txt', encoding='utf-8').read().strip().split('\n')
+    lines = open('dataset/eng-fra.txt', encoding='utf-8').read().strip().split('\n')
     pairs = [[normalize_string(s) for s in l.split('\t')] for l in lines]
 
     if reverse:
@@ -98,7 +98,7 @@ eng_prefixes = (
     "he is", "he s ",
     "she is", "she s ",
     "you are", "you re ",
-    "we are", "we re ", 
+    "we are", "we re ",
     "they are", "they re "
 )
 
@@ -283,12 +283,10 @@ class AttentionDecoderRNN(nn.Module):
 def indexes_from_sentence(lang, sentence):
     return [lang.word2index[word] for word in sentence.split(' ')]
 
-
 def tensor_from_sentence(lang, sentence):
     indexes = indexes_from_sentence(lang, sentence)
     indexes.append(EOS_token)
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
-
 
 def tensor_from_pair(pair):
     """

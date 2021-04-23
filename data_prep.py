@@ -102,6 +102,7 @@ def data_preprocess(do_filter=True):
     Args:
         do_filter (bool): 对数据集筛选，去掉较长的数据
     data/文件结构如下：
+        fra-eng-all.txt         # 筛选清洗后的　乱序版　法－英　训练集＋验证集
         fra-eng-train.txt       # 筛选清洗后的 乱序版 法-英 训练集
         fra-eng-val.txt         # 筛选清洗后的 乱序版 法-英 验证集
     Returns:
@@ -125,6 +126,9 @@ def data_preprocess(do_filter=True):
     
     if not os.path.exists('data/'):
         os.makedirs('data/')
+    all_pair_file = open('data/fra-eng-all.txt', 'w', encoding='utf8')
+    for pair in pairs:
+        all_pair_file.write(pair[0] + '\t' + pair[1] + '\n')
     train_file = open('data/fra-eng-train.txt', 'w', encoding='utf8')
     for pair in train_pairs:
         train_file.write(pair[0] + '\t' + pair[1] + '\n')
@@ -132,5 +136,6 @@ def data_preprocess(do_filter=True):
     for pair in val_pairs:
         val_file.write(pair[0] + '\t' + pair[1] + '\n')
     
+
 if __name__ == '__main__':
     data_preprocess()

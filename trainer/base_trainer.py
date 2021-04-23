@@ -19,12 +19,14 @@ class BaseTrainer:
                  optim_enc,
                  optim_dec,
                  loss_function,
+                 word2indexs,  # word到index的映射
                  visual):
         self.n_gpu = torch.cuda.device_count()
         self.device = self._prepare_device(self.n_gpu, cudnn_deterministic=config["cudnn_deterministic"])
 
         self.encoder = encoder.to(self.device)
         self.decoder = decoder.to(self.device)
+        self.encoder_hidden = encoder.init_hidden()
 
         if self.n_gpu > 1:
             self.encoder = torch.nn.DataParallel(self.encoder, device_ids=list(range(self.n_gpu)))
@@ -32,8 +34,11 @@ class BaseTrainer:
 
         self.optimizer_enc = optim_enc
         self.optimizer_dec = optim_dec
+        self.optimizer_enc.zero_grad()
+        self.optimizer_dec.zero_grad()
 
         self.loss_function = loss_function
+        self.word2indexs = word2indexs
         self.visual = visual
 
         # Trainer

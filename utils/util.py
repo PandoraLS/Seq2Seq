@@ -52,7 +52,6 @@ def initialize_config(module_cfg):
     1. 加载 type 参数对应的模块
     2. 调用(实例化)模块内部对应 main 参数的函数(类)
     3. 再调用(实例化)时将 args 参数输入函数(类)
-    
     :param module_cfg: 配置信息， 参见json文件
     :return: 实例化后的函数(类)
     """
@@ -89,7 +88,17 @@ def set_requires_grad(nets, requires_grad=False):
             for param in net.parameters():
                 param.requires_grad = requires_grad
 
+
 if __name__ == '__main__':
-    timer = ExecutionTime()
-    time.sleep(3)
-    print("Execution time: ", timer.duration())
+    pass
+    # timer = ExecutionTime()
+    # time.sleep(1)
+    # print("Execution time: ", timer.duration())
+
+    cfg = {
+        "module": "models.unet",
+        "main": "UNet",
+        "args": {...}
+    }
+    
+    

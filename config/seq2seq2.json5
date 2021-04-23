@@ -32,11 +32,6 @@
         "beta1": 0.9,
         "beta2": 0.999
     },
-    "word2index": {
-        "module": "data_load.word_dict_loader" ,
-        "main": "Word2Indexs",
-        "data_path": "~/lisen/code/Seq2Seq/data/fra-eng-all.txt"
-    },
     "train_dataset": {
         "module": "dataset.waveform_dataset",
         "main": "WaveformDataset",
