@@ -4,8 +4,9 @@
     "root_dir": "~/uestc/xiaomi_code/SpeechEnhancement",
     "cudnn_deterministic": false,
     "trainer": {
-        "epochs": 200,
+        "epochs": 3,
         "save_checkpoint_interval": 10,
+        "teacher_forcing_ratio": 0.5,
         "validation": {
             "interval": 10,
             "find_max": true,

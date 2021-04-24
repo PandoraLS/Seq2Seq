@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/4/22 下午12:18
 
-
-import torch
-import numpy as np
-import json5
 import time
-import logging
+import torch
+import json5
+import numpy as np
 from pathlib import Path
 from utils.util import prepare_empty_dir, ExecutionTime
 
@@ -19,14 +17,12 @@ class BaseTrainer:
                  optim_enc,
                  optim_dec,
                  loss_function,
-                 word2indexs,  # word到index的映射
                  visual):
         self.n_gpu = torch.cuda.device_count()
         self.device = self._prepare_device(self.n_gpu, cudnn_deterministic=config["cudnn_deterministic"])
 
         self.encoder = encoder.to(self.device)
         self.decoder = decoder.to(self.device)
-        self.encoder_hidden = encoder.init_hidden()
 
         if self.n_gpu > 1:
             self.encoder = torch.nn.DataParallel(self.encoder, device_ids=list(range(self.n_gpu)))
@@ -38,17 +34,20 @@ class BaseTrainer:
         self.optimizer_dec.zero_grad()
 
         self.loss_function = loss_function
-        self.word2indexs = word2indexs
         self.visual = visual
+        
+        # word2indexs
+        self.word2indexs = config["word2index"]
 
         # Trainer
         self.epochs = config["trainer"]["epochs"]
         self.save_checkpoint_interval = config["trainer"]["save_checkpoint_interval"]
+        self.teacher_forcing_ratio = config["trainer"]["teacher_forcing_ratio"] # 使用teacher_forcing 所占的比例
         self.validation_config = config["trainer"]["validation"]
         self.validation_interval = self.validation_config["interval"]
         self.find_max = self.validation_config["find_max"]
         self.validation_custom_config = self.validation_config["custom"]
-
+        
         self.start_epoch = 1
         self.best_score = -np.inf if self.find_max else np.inf
         self.root_dir = Path(config["root_dir"]).expanduser().absolute() / "runs" / config["experiment_name"]
@@ -67,8 +66,8 @@ class BaseTrainer:
 
         if resume: self._resume_checkpoint()
 
-        logging.info('Configurations are as follow: ')
-        logging.info(json5.dumps(config, indent=2, sort_keys=False))
+        print('Configurations are as follow: ')
+        print(json5.dumps(config, indent=2, sort_keys=False))
 
         with open((self.root_dir / f"{time.strftime('%Y-%m-%d-%H-%M-%S')}.json").as_posix(), 'w') as handle:
             json5.dump(config, handle, indent=2, sort_keys=False)
@@ -99,7 +98,7 @@ class BaseTrainer:
             self.encoder.load_state_dict(checkpoint["encoder"])
             self.decoder.load_state_dict(checkpoint["decoder"])
 
-        logging.info(f"Model checkpoint loaded. Training will begin in {self.start_epoch} epoch.")
+        print(f"Model checkpoint loaded. Training will begin in {self.start_epoch} epoch.")
 
     def _save_checkpoint(self, epoch, is_best=False):
         """
@@ -112,7 +111,7 @@ class BaseTrainer:
         :param is_best(bool): if current checkpoint got the best score, it also will be saved in <root_dir>/checkpoints/best_model.tar.
         :return:
         """
-        logging.info(f"\t Saving {epoch} epoch model checkpoint...")
+        print(f"\t Saving {epoch} epoch model checkpoint...")
 
         # Construct checkpoint tar package
         state_dict = {
@@ -144,7 +143,7 @@ class BaseTrainer:
         
         # 由于不通过score来评判模型，所以不存储best模型
         # if is_best:
-        #     logging.info(f"\t Found best score in {epoch} epoch, saving...")
+        #     print(f"\t Found best score in {epoch} epoch, saving...")
         #     torch.save(state_dict, (self.checkpoints_dir / "best_model.tar").as_posix())
         #     # torch.save(state_dict["model"], (self.checkpoints_dir / f"model_best.pth").as_posix())
 
@@ -166,11 +165,11 @@ class BaseTrainer:
         :return: device
         """
         if n_gpu == 0:
-            logging.info("Using CPU in the experiment.")
+            print("Using CPU in the experiment.")
             device = torch.device("cpu")
         else:
             if cudnn_deterministic:
-                logging.info("Using CuDNN deterministic mode in the experiment.")
+                print("Using CuDNN deterministic mode in the experiment.")
                 torch.backends.cudnn.deterministic = True
                 torch.backends.cudnn.benchmark = False
             device = torch.device("cuda:0")
@@ -195,17 +194,17 @@ class BaseTrainer:
 
     @staticmethod
     def _print_networks(nets: list):
-        logging.info(f"This project contain {len(nets)} networks, the number of the parameters: ")
+        print(f"This project contain {len(nets)} networks, the number of the parameters: ")
         params_of_all_networks = 0
         for i, net in enumerate(nets, start=1):
             params_of_network = 0
             for param in net.parameters():
                 params_of_network += param.numel()
 
-            logging.info(f"\t Network {i}: {params_of_network / 1e6} million.")
+            print(f"\t Network {i}: {params_of_network / 1e6} million.")
             params_of_all_networks += params_of_network
 
-        logging.info(f"The amount of parameters in project is {params_of_all_networks / 1e6} million.")
+        print(f"The amount of parameters in project is {params_of_all_networks / 1e6} million.")
 
     def _set_models_to_train_mode(self):
         self.encoder.train()
@@ -217,8 +216,8 @@ class BaseTrainer:
 
     def train(self):
         for epoch in range(self.start_epoch, self.epochs + 1):
-            logging.info(f"================== {epoch} epoch ==================")
-            logging.info("[0 seconds] Begin training...")
+            print(f"================== {epoch} epoch ==================")
+            print("[0 seconds] Begin training...")
             timer = ExecutionTime()
 
             self._set_models_to_train_mode()
@@ -228,17 +227,17 @@ class BaseTrainer:
                 self._save_checkpoint(epoch)
 
             if self.validation_interval != 0 and epoch % self.validation_interval == 0:
-                logging.info(f"[{timer.duration():.3f} seconds] Training is over, Validation is in progress...")
+                print(f"[{timer.duration():.3f} seconds] Training is over, Validation is in progress...")
 
                 self._set_models_to_eval_mode()
                 
                 # 由于不进行验证集的指标评估，所以不通过score保存模型
                 # score = self._validation_epoch(epoch)
                 # if self._is_best(score, find_max=self.find_max):
-                #     logging.info(f"\t Best score: {score:.4f}")
+                #     print(f"\t Best score: {score:.4f}")
                 #     self._save_checkpoint(epoch, is_best=True)
 
-            logging.info(f"[{timer.duration():.3f} seconds] End this epoch.")
+            print(f"[{timer.duration():.3f} seconds] End this epoch.")
 
     def _train_epoch(self, epoch):
         raise NotImplementedError
