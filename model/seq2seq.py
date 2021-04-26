@@ -99,3 +99,18 @@ if __name__ == '__main__':
     decoder = DecoderGRU(hidden_size=128, output_size=256).to(device)
     print(decoder)
     summary(decoder, inputs, hiddens)
+    
+    
+    print("..............................................")
+    from utils.util import initialize_config
+
+    config = {
+        "module": "seq2seq",
+        "main": "EncoderGRU",
+        "args": {
+            "input_size": 256,
+            "hidden_size": 256
+        }
+    }
+    encoder = initialize_config(config)
+    

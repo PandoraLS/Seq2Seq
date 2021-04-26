@@ -35,14 +35,14 @@ class Language:
 
 
 class Word2Indexs:
-    def __init__(self, data_file_path):
+    def __init__(self, data_path):
         """
         根据数据集all构建word到index的映射关系
         Args:
-            data_file_path: 数据集(训练集+验证集)
+            data_path: 数据集(训练集+验证集)
         """
         super(Word2Indexs, self).__init__()
-        self.dataset_lines = open(data_file_path, encoding='utf-8').read().strip().split('\n')
+        self.dataset_lines = open(data_path, encoding='utf-8').read().strip().split('\n')
         self.pairs = [[s for s in l.split('\t')] for l in self.dataset_lines]
         self.input_lang, self.output_lang = Language('fra'), Language('eng')  # 输入法语,输出英文
         for pair in self.pairs:
@@ -53,5 +53,5 @@ class Word2Indexs:
 
 
 if __name__ == '__main__':
-    word2index = Word2Indexs(data_file_path='../data/fra-eng-all.txt')
+    word2index = Word2Indexs(data_path='../data/fra-eng-all.txt')
     print()

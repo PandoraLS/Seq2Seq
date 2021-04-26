@@ -35,18 +35,12 @@ class BaseTrainer:
 
         self.loss_function = loss_function
         self.visual = visual
-        
-        # word2indexs
-        self.word2indexs = config["word2index"]
 
         # Trainer
         self.epochs = config["trainer"]["epochs"]
         self.save_checkpoint_interval = config["trainer"]["save_checkpoint_interval"]
         self.teacher_forcing_ratio = config["trainer"]["teacher_forcing_ratio"] # 使用teacher_forcing 所占的比例
-        self.validation_config = config["trainer"]["validation"]
-        self.validation_interval = self.validation_config["interval"]
-        self.find_max = self.validation_config["find_max"]
-        self.validation_custom_config = self.validation_config["custom"]
+        self.find_max = True # max表示模型好
         
         self.start_epoch = 1
         self.best_score = -np.inf if self.find_max else np.inf
@@ -225,17 +219,6 @@ class BaseTrainer:
 
             if self.save_checkpoint_interval != 0 and (epoch % self.save_checkpoint_interval == 0):
                 self._save_checkpoint(epoch)
-
-            if self.validation_interval != 0 and epoch % self.validation_interval == 0:
-                print(f"[{timer.duration():.3f} seconds] Training is over, Validation is in progress...")
-
-                self._set_models_to_eval_mode()
-                
-                # 由于不进行验证集的指标评估，所以不通过score保存模型
-                # score = self._validation_epoch(epoch)
-                # if self._is_best(score, find_max=self.find_max):
-                #     print(f"\t Best score: {score:.4f}")
-                #     self._save_checkpoint(epoch, is_best=True)
 
             print(f"[{timer.duration():.3f} seconds] End this epoch.")
 

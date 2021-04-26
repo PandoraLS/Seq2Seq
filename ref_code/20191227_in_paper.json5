@@ -1,0 +1,71 @@
+{
+    "seed": 0,
+    "description": "",
+    "root_dir": "~/Experiments/UNetGAN-in-Paper",
+    "cudnn_deterministic": false,
+    "trainer": {
+        "epochs": 1200,
+        "additional_loss_factor": 20,
+        "adversarial_loss_factor": 1,
+        "soft_label": true,
+        "save_checkpoint_interval": 10,
+        "validation": {
+            "interval": 10,
+            "find_max": true,
+            "custom": {
+                "visualize_audio_limit": 20,
+                "visualize_waveform_limit": 20,
+                "visualize_spectrogram_limit": 20,
+                "sample_length": 16384
+            }
+        }
+    },
+    "generator_model": {
+        "module": "model.generator_basic_model",
+        "main": "GeneratorBasicModel",
+        "args": {}
+    },
+    "discriminator_model": {
+        "module": "model.discriminator_basic_model",
+        "main": "DiscriminatorBasicModel",
+        "args": {}
+    },
+    "additional_loss_function": {
+        "module": "util.loss",
+        "main": "mse_loss",
+        "args": {}
+    },
+    "optimizer": {
+        "G_lr": 0.0002,
+        "D_lr": 0.0002,
+        "beta1": 0.9,
+        "beta2": 0.999
+    },
+    "train_dataset": {
+        "module": "dataset.waveform_dataset",
+        "main": "WaveformDataset",
+        "args": {
+            "dataset": "~/Datasets/UNetGAN-Dataset-in-Finally-Paper/train.txt",
+            "limit": null,
+            "offset": 0,
+            "sample_length": 16384,
+            "train": true
+        }
+    },
+    "validation_dataset": {
+        "module": "dataset.waveform_dataset",
+        "main": "WaveformDataset",
+        "args": {
+            "dataset": "~/Datasets/UNetGAN-Dataset-in-Finally-Paper/validation.txt",
+            "limit": 400,
+            "offset": 0,
+            "train": false
+        }
+    },
+    "train_dataloader": {
+        "batch_size": 600,
+        "num_workers": 40,
+        "shuffle": true,
+        "pin_memory": true
+    }
+}

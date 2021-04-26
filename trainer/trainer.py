@@ -15,47 +15,46 @@ class Trainer(BaseTrainer):
                  optim_dec,
                  loss_fucntion,
                  visual,
-                 train_dl,
-                 validation_dl,
+                 dataset,
+                 word2indexs,
                  sentence_max_length):
         super().__init__(config, resume, encoder, decoder, optim_enc, optim_dec, loss_fucntion, visual)
-        self.train_dataloader = train_dl
-        self.validation_dataloader = validation_dl
-        self.sentence_max_length = sentence_max_length # 输入sentence的最大长度,与data_prep.py中的max_length保持一致
         self.SOS_token = 0
         self.EOS_token = 1
+        self.dataset = dataset
+        self.word2indexs = word2indexs
+        self.sentence_max_length = sentence_max_length # 输入sentence的最大长度,与data_prep.py中的max_length保持一致
         self.print_loss_every = 1000 # 每1000个iter打印一次loss值
         self.print_loss_total = 0
+        self.n_iter = 0
 
     def _train_epoch(self, epoch):
-        for i, (src_sentence, tar_sentence) in enumerate(self.train_dataloader, start=1):
-            # For visualization
-            batch_size = self.train_dataloader.batch_size
-            n_batch = len(self.train_dataloader)
-            # model共处理了n_iter条数据
-            n_iter = n_batch * batch_size * (epoch - 1) + i * batch_size
-            
-            input_tensor, output_tensor = self._pair_to_tensor(src_sentence, tar_sentence) # 把数据转换为tensor
+        # TODO 目前这种载入数据的方法非常难用，需要自定义dataloader方法,参考下面链接
+        # https://github.com/PandoraLS/Chinese-Text-Classification-Pytorch/blob/master/utils.py
+        for i in range(self.dataset.length):
+            self.n_iter += 1
+            (src_sentence, tar_sentence) = self.dataset.__getitem__(i)
+            input_tensor, output_tensor = self._pair_to_tensor(src_sentence, tar_sentence)  # 把数据转换为tensor
             loss_iter = self._train_iter(input_tensor, output_tensor, self.sentence_max_length)
             self.print_loss_total += loss_iter
-            
-            if n_iter % self.print_loss_every == 0:
+
+            if self.n_iter % self.print_loss_every == 0:
                 print_loss_avg = self.print_loss_total / self.print_loss_every
                 self.print_loss_total = 0
-                print("iter / current 1000 iter mean loss: {} / {:.4f}".format(n_iter, print_loss_avg))
-                
+                print("iter / current 1000 iter mean loss: {} / {:.4f}".format(self.n_iter, print_loss_avg))
+
                 # 验证当前翻译效果
                 print("input:       ", src_sentence)
                 output_words = self._eval_iter(input_tensor, self.sentence_max_length)
                 print("predict:     ", ' '.join(output_words))
                 print("groundtruth: ", tar_sentence)
                 print()
-                
+
             with torch.no_grad():
                 if self.visual:
                     self.writer.add_scalars(f"模型/损失值_n_iter", {
                         "loss_iter": loss_iter
-                    }, n_iter)
+                    }, self.n_iter)
         
     def _train_iter(self, input_tensor, output_tensor, max_length):
         """
@@ -67,7 +66,7 @@ class Trainer(BaseTrainer):
         Returns:
             当前iter的loss值
         """
-        encoder_hidden = self.encoder.init_hidden()
+        encoder_hidden = self.encoder.init_hidden().to(self.device)
         self.optimizer_enc.zero_grad()
         self.optimizer_dec.zero_grad()
         input_length, output_length = input_tensor.size(0), output_tensor.size(0)
@@ -113,7 +112,7 @@ class Trainer(BaseTrainer):
     def _eval_iter(self, input_tensor, max_length):
         with torch.no_grad():
             input_length = input_tensor.size(0)
-            encoder_hidden = self.encoder.init_hidden()
+            encoder_hidden = self.encoder.init_hidden().to(self.device)
             encoder_outputs = torch.zeros(max_length, self.encoder.hidden_size, device=self.device)
 
             for ei in range(input_length):
@@ -137,7 +136,7 @@ class Trainer(BaseTrainer):
                 else:
                     decoded_words.append(self.word2indexs.output_lang.index2word[topi.item()])
                 decoder_input = topi.squeeze().detach()  # detach from history as input
-            return decoded_words
+            return decoded_words[:-1]
     
     def _pair_to_tensor(self, input_sentence, output_sentence):
         """

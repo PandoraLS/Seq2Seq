@@ -31,14 +31,14 @@ class Language:
 
 
 class Word2Index:
-    def __init__(self, data_file_path):
+    def __init__(self, data_path):
         """
         根据数据集all构建word到index的映射关系
         Args:
-            data_file_path: 数据集(训练集+验证集)
+            data_path: 数据集(训练集+验证集)
         """
         super(Word2Index, self).__init__()
-        self.dataset_lines = open(data_file_path, encoding='utf-8').read().strip().split('\n')
+        self.dataset_lines = open(data_path, encoding='utf-8').read().strip().split('\n')
         self.pairs = [[s for s in l.split('\t')] for l in self.dataset_lines]
         self.input_lang, self.output_lang = Language('fra'), Language('eng')  # 输入法语,输出英文
         for pair in self.pairs:
@@ -70,10 +70,10 @@ def initialize_config(module_cfg):
 if __name__ == '__main__':
     pass
     cfg = {
-        "module": "test",
+        "module": "Word2Index_demo",
         "main": "Word2Index",
         "args": {
-            "data_file_path": "/home/lisen/lisen/code/Seq2Seq/data/fra-eng-all.txt"
+            "data_path": "/home/lisen/lisen/code/Seq2Seq/data/fra-eng-all.txt"
         }
     }
     word2indexs = initialize_config(cfg)
