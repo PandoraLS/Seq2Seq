@@ -3,7 +3,7 @@
 
 import torch
 import random
-from trainer.base_trainer import BaseTrainer
+from experiment.base_trainer import BaseTrainer
 
 class Trainer(BaseTrainer):
     def __init__(self,

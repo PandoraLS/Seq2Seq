@@ -8,7 +8,7 @@ import torch
 import argparse
 import numpy as np
 from utils.util import initialize_config
-from trainer.trainer import Trainer
+from experiment.trainer import Trainer
 from model.seq2seq import EncoderGRU, DecoderGRU
 
 def config():
